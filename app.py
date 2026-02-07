@@ -32,7 +32,7 @@ def index():
 
 img = client.images.generate(
     model="gpt-image-1",
-    prompt= result,
+    prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
     n=1,
     size="1024x1024"
 )
