@@ -40,7 +40,7 @@ def index():
                 model="gpt-image-1",
                 prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
                 n=1,
-                size="512x512"
+                size="auto"
             )
 
             image_bytes = base64.b64decode(img.data[0].b64_json)
