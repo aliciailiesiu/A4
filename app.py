@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import base64
 from openai import OpenAI
+
 client = OpenAI()
 
 load_dotenv()  # Load environment variables from .env
@@ -22,21 +23,27 @@ def index():
         try:
             response = openai.responses.create(
                 model="gpt-4.1",  
-                input=[{"role": "developer", "content": "Interpret dreams using Carl Jung’s analytical psychology, treating them as symbolic messages from the unconscious that draw on archetypes and the collective unconscious, and relating them to personal growth through individuation while speaking in a reflective, non-absolute tone."}, 
-                          {"role": "user", "content": prompt}],
-                          temperature=1.5,
-                          max_output_tokens=150
+                input=[
+                    {
+                        "role": "developer",
+                        "content": "Interpret dreams using Carl Jung’s analytical psychology, treating them as symbolic messages from the unconscious that draw on archetypes and the collective unconscious, and relating them to personal growth through individuation while speaking in a reflective, non-absolute tone."}, 
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=1.5,
+                    max_output_tokens=150
             )
+
+            result = response.output_text
+
+
             img = client.images.generate(
-            model="gpt-image-1",
-            prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
-            n=1,
-            size="1024x1024"
+                model="gpt-image-1",
+                prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
+                n=1,
+                size="1024x1024"
             )
 
-
-
-image_bytes = base64.b64decode(img.data[0].b64_json)
+            image_bytes = base64.b64decode(img.data[0].b64_json)
             image_path = "static/output.png"
             with open(image_path, "wb") as f:
                 f.write(image_bytes)
