@@ -14,8 +14,11 @@ openai.api_key = os.getenv("OPENAI_API_KEY")  # Securely load API key
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
+    image_path = None
+
     if request.method == "POST":
         prompt = request.form["prompt"]
+
         try:
             response = openai.responses.create(
                 model="gpt-4.1",  
@@ -24,23 +27,24 @@ def index():
                           temperature=1.5,
                           max_output_tokens=150
             )
-            result = response.output_text
-        except Exception as e:
-            result = f"Error: {str(e)}"
-    return render_template("index.html", result=result)
+            img = client.images.generate(
+            model="gpt-image-1",
+            prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
+            n=1,
+            size="1024x1024"
+            )
 
 
-img = client.images.generate(
-    model="gpt-image-1",
-    prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
-    n=1,
-    size="1024x1024"
-)
 
 image_bytes = base64.b64decode(img.data[0].b64_json)
-with open("output.png", "wb") as f:
-    f.write(image_bytes)
+            image_path = "static/output.png"
+            with open(image_path, "wb") as f:
+                f.write(image_bytes)
 
+        except Exception as e:
+            result = f"Error: {str(e)}"
+
+    return render_template("index.html", result=result, image_path=image_path)
 
 if __name__ == "__main__":
     app.run(debug=True)  # Run locally for testing
