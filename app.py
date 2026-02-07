@@ -18,9 +18,11 @@ def index():
     image_path = None
 
     if request.method == "POST":
-        prompt = request.form["prompt"]
-
+       
         try:
+
+            prompt = request.form["prompt"]
+
             response = openai.responses.create(
                 model="gpt-4.1",  
                 input=[
