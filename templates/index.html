@@ -25,6 +25,12 @@
         {% if result %}
             <h3 class="mt-4">Response:</h3>
             <div class="alert alert-secondary">{{ result }}</div>
+            {% if image_path %}
+        <h3 class="mt-4">Dream Visualization:</h3>
+        <img src="{{ url_for('static', filename='output.png') }}"
+             class="img-fluid rounded shadow mt-3"
+             alt="Generated dream image">
+    {% endif %}
         {% endif %}
     </div>
 </body>
