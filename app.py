@@ -2,6 +2,9 @@ from flask import Flask, render_template, request
 import openai
 import os
 from dotenv import load_dotenv
+import base64
+from openai import OpenAI
+client = OpenAI()
 
 load_dotenv()  # Load environment variables from .env
 
@@ -16,15 +19,28 @@ def index():
         try:
             response = openai.responses.create(
                 model="gpt-4.1",  
-                input=[{"role": "developer", "content": "You are a psychedelic AI that speaks in Oulipian constraints. Your responses are short, surreal, and witty. Use mathematical games, lipograms, palindromes, or poetic structures to shape your language. Avoid predictable phrasing. Let logic slip through the cracks like liquid geometry."}, 
+                input=[{"role": "developer", "content": "Interpret dreams using Carl Jung’s analytical psychology, treating them as symbolic messages from the unconscious that draw on archetypes and the collective unconscious, and relating them to personal growth through individuation while speaking in a reflective, non-absolute tone."}, 
                           {"role": "user", "content": prompt}],
-                          temperature=1.2,
-                          max_output_tokens=50
+                          temperature=1.5,
+                          max_output_tokens=150
             )
             result = response.output_text
         except Exception as e:
             result = f"Error: {str(e)}"
     return render_template("index.html", result=result)
+
+
+img = client.images.generate(
+    model="gpt-image-1",
+    prompt= result,
+    n=1,
+    size="1024x1024"
+)
+
+image_bytes = base64.b64decode(img.data[0].b64_json)
+with open("output.png", "wb") as f:
+    f.write(image_bytes)
+
 
 if __name__ == "__main__":
     app.run(debug=True)  # Run locally for testing
