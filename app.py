@@ -26,6 +26,9 @@ def index():
                           max_output_tokens=100
             )
             result = response.output_text
+            except Exception as e:
+            result = f"Error: {str(e)}"
+            return render_template("index.html", result=result)
 
             ##img = client.images.generate(
             ##model="gpt-image-1",
