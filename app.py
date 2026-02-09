@@ -9,8 +9,20 @@ client = OpenAI()
 
 load_dotenv()  # Load environment variables from .env
 
+# Create static folder if missing (important on Render)
+os.makedirs("static", exist_ok=True)
+
+# Use ONE client style (recommended)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 app = Flask(__name__)
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Securely load API key
+
+DEV_PROMPT = (
+    "Interpret dreams using Carl Jung’s analytical psychology, treating them as symbolic "
+    "messages from the unconscious that draw on archetypes and the collective unconscious, "
+    "and relating them to personal growth through individuation while speaking in a reflective, "
+    "non-absolute tone."
+)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -20,40 +32,42 @@ def index():
     if request.method == "POST":
        
         try:
+            prompt = request.form.get("prompt", "").strip()
+            if not prompt:
+                return render_template("index.html", result="Please enter a dream.", image_path=None)
 
-            prompt = request.form["prompt"]
-
-            response = openai.responses.create(
-                model="gpt-4.1",  
+          # ---- TEXT ----
+            text_resp = client.responses.create(
+                model="gpt-4.1",
                 input=[
-                    {
-                        "role": "developer",
-                        "content": "Interpret dreams using Carl Jung’s analytical psychology, treating them as symbolic messages from the unconscious that draw on archetypes and the collective unconscious, and relating them to personal growth through individuation while speaking in a reflective, non-absolute tone."}, 
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=1.5,
-                    max_output_tokens=150
+                    {"role": "developer", "content": DEV_PROMPT},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=1.5,
+                max_output_tokens=150,
             )
+            result = text_resp.output_text
 
-            result = response.output_text
-
-
-            img = client.images.generate(
+            # ---- IMAGE ----
+            img_resp = client.images.generate(
                 model="gpt-image-1",
                 prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
-                n=1,
-                size="auto"
+                size="auto",   # valid: auto / 1024x1024 / 1024x1536 / 1536x1024
             )
 
-            image_bytes = base64.b64decode(img.data[0].b64_json)
-            image_path = "static/output.png"
-            with open(image_path, "wb") as f:
+            image_bytes = base64.b64decode(img_resp.data[0].b64_json)
+            image_path = "output.png"
+            with open(os.path.join("static", image_path), "wb") as f:
                 f.write(image_bytes)
 
         except Exception as e:
+            # This prints the REAL error into Render logs
+            print("ERROR in POST:", repr(e))
             result = f"Error: {str(e)}"
+            image_path = None
 
     return render_template("index.html", result=result, image_path=image_path)
 
+
 if __name__ == "__main__":
-    app.run(debug=True)  # Run locally for testing
+    app.run(debug=True)
