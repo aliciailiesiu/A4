@@ -1,11 +1,9 @@
 from flask import Flask, render_template, request
-import openai
 import os
 from dotenv import load_dotenv
 import base64
 from openai import OpenAI
-
-client = OpenAI()
+from uuid import uuid4
 
 load_dotenv()  # Load environment variables from .env
 
@@ -52,11 +50,15 @@ def index():
             img_resp = client.images.generate(
                 model="gpt-image-1",
                 prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
-                size="auto",   # valid: auto / 1024x1024 / 1024x1536 / 1536x1024
+                size="1024x1024",
+                response_format="b64_json",
             )
 
+            if not img_resp.data or not img_resp.data[0].b64_json:
+                raise RuntimeError("Image API returned no base64 data.")
+
             image_bytes = base64.b64decode(img_resp.data[0].b64_json)
-            image_path = "output.png"
+            image_path = f"output_{uuid4().hex}.png"
             with open(os.path.join("static", image_path), "wb") as f:
                 f.write(image_bytes)
 
