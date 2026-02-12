@@ -50,7 +50,7 @@ def index():
             img_resp = client.images.generate(
                 model="gpt-image-1",
                 prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
-                size="1024x1024",
+                size="512x512",
             )
 
             if not img_resp.data or not img_resp.data[0].b64_json:
