@@ -44,7 +44,7 @@ def index():
                     {"role": "user", "content": prompt},
                 ],
                 temperature=1.5,
-                max_output_tokens=150,
+                max_output_tokens=1000,
             )
             result = text_resp.output_text
 
