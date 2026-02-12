@@ -15,8 +15,10 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
 
+IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "dall-e-2")
+
 DEV_PROMPT = (
-    "Interpret dreams using Carl Jung’s analytical psychology, treating them as symbolic "
+    "Interpret dreams using Carl Jung's analytical psychology, treating them as symbolic "
     "messages from the unconscious that draw on archetypes and the collective unconscious, "
     "and relating them to personal growth through individuation while speaking in a reflective, "
     "non-absolute tone."
@@ -47,11 +49,33 @@ def index():
             result = text_resp.output_text
 
             # ---- IMAGE ----
-            img_resp = client.images.generate(
-                model="gpt-image-1",
-                prompt=f"Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, detailed illustration: {prompt}",
-                size="512x512",
+            image_prompt = (
+                "Surreal symbolic dream imagery, cinematic lighting, mystical atmosphere, "
+                f"detailed illustration: {prompt}"
             )
+
+            try:
+                if IMAGE_MODEL == "dall-e-2":
+                    img_resp = client.images.generate(
+                        model=IMAGE_MODEL,
+                        prompt=image_prompt,
+                        size="512x512",
+                        response_format="b64_json",
+                    )
+                else:
+                    img_resp = client.images.generate(
+                        model=IMAGE_MODEL,
+                        prompt=image_prompt,
+                        size="1024x1024",
+                    )
+            except Exception as img_err:
+                # Fallback for size/parameter issues across models
+                print("IMAGE GENERATION RETRY:", repr(img_err))
+                img_resp = client.images.generate(
+                    model=IMAGE_MODEL,
+                    prompt=image_prompt,
+                    size="1024x1024",
+                )
 
             if not img_resp.data or not img_resp.data[0].b64_json:
                 raise RuntimeError("Image API returned no base64 data.")
